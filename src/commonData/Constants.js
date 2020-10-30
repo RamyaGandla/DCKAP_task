@@ -19,15 +19,7 @@ export const Constants = {
   },
 
   Tasks: {
-    "0": {
-      "id": 0,
-      "name": "Task1",
-      "desciption": "",
-      "type": 0,
-      "Duedate": "",
-      "taskCompleted": 0,
-      "status": 0,
-    },
+    
   },
 
   Status: {

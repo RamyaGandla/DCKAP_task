@@ -2,23 +2,25 @@ import React, { Component } from 'react';
 import * as reactbootstrap from 'react-bootstrap';
 import { Constants } from '../commonData/Constants';
 import { Form } from 'react-bootstrap'
+var DateDiff = require('date-diff');
 
 class ManageTasks extends Component {
   constructor(props) {
     super(props)
     this.state = {
       tasks: this.props.tasks,
-      taskTypes: Constants.Types,
       typeFilter: '',
       statusFilter: '',
       Statuses: Constants.Status,
       allTypes: Constants.filterTypes,
+      taskStatus: 1,
     }
 
     this.convert = this.convert.bind(this)
     this.deleteTask = this.deleteTask.bind(this)
     this.handleTypeSelection = this.handleTypeSelection.bind(this)
     this.handleStatusSelection = this.handleStatusSelection.bind(this)
+    this.makeTaskCompleted = this.makeTaskCompleted.bind(this)
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -40,10 +42,12 @@ class ManageTasks extends Component {
       })
       this.setState({
         tasks: allTasks,
+        typeFilter: e.target.value,
       })
     } else {
       this.setState({
         tasks: totalTasks,
+        typeFilter: e.target.value,
       })
     }
   }
@@ -59,79 +63,146 @@ class ManageTasks extends Component {
       })
       this.setState({
         tasks: allTasks,
+        statusFilter: e.target.value,
       })
     } else {
       this.setState({
         tasks: totalTasks,
+        statusFilter: e.target.value,
       })
     }
   }
 
-  convert(str) {
-    // let dueDate = str.toLocaleString()
-    // let currentDate = todayDate.toLocaleString()
-    // console.log(str.toLocaleString());
-    var todayDate = new Date();
-    // console.log(todayDate);
-    // console.log(todayDate.toLocaleString());
-    // let diff = null
-    // if(todayDate.toLocaleString() > str.toLocaleString()) {
-    //   diff = todayDate.toLocaleString() - str.toLocaleString()
-    // } else {
-    //   diff = str.toLocaleString() - todayDate.toLocaleString()
-    // }
-    // console.log(diff);
-    // Duedate: Thu Oct 01 2020 00:08:00 GMT+0530
-    var date = new Date(str),
-    mnth = ("0" + (date.getMonth() + 1)).slice(-2),
-    day = ("0" + date.getDate()).slice(-2);
-    // console.log(date);
-    return [date.getFullYear(), mnth, day].join("-");
+  convert(str, id, status) {
+    console.log(id);
+    var todayDate = Date();
+    var date1 = new Date(todayDate);
+    // mnth1 = ("0" + (date1.getMonth() + 1)).slice(-2),
+    // day1 = ("0" + date1.getDate()).slice(-2),
+    // hours1 = ("0" + date1.getHours()).slice(-2),
+    // minutes1 = ("0" + date1.getMinutes()).slice(-2),
+    // seconds1 = ("0" + date1.getSeconds()).slice(-2);
+    // let dateOne = [date1.getFullYear(), mnth1, day1].join("-")
+    // var timeOne = [hours1, minutes1, seconds1].join(":");
+    var date = new Date(str);
+    // mnth = ("0" + (date.getMonth() + 1)).slice(-2),
+    // day = ("0" + date.getDate()).slice(-2),
+    // hours = ("0" + date.getHours()).slice(-2),
+    // minutes = ("0" + date.getMinutes()).slice(-2),
+    // seconds = ("0" + date.getSeconds()).slice(-2);
+    // let dateTwo = [date.getFullYear(), mnth, day].join("-")
+    // var timeTwo = [hours, minutes, seconds].join(":");
 
-    // var str = $.datepicker.formatDate('yy-mm-dd', d)
-    //
-    // var d = "Fri Jan 31 2014 00:00:00 GMT-0800 (Pacific Standard Time)";
-    // alert(convertDate(d));
-    // currentTimeDate.getDay()
-    // => 6
-    // (Returns the day of the week (0-6))
-    // currentTimeDate.getMonth()
-    // => 7
-    // (Returns the month (0-11))
-    // currentTimeDate.getDate()
-    // => 5
-    // (Returns the day of the month (1-31))
-    // currentTimeDate.getFullYear()
-    // => 2017
-    // (Returns the year (4 digits for 4-digit years))
-    // currentTimeDate.getHours()
-    // => 2
-    // (Returns the hour (0-23))
-    // currentTimeDate.getMinutes()
-    // => 43
-    // (Returns the minutes (0-59))
-    // currentTimeDate.getSeconds()
-    // => 14
-    // (Returns the seconds (0-59))
-    //
-    //     // const today = new Date()
-        // let dateTime = today.toLocaleString('default', { month: 'long' })
-        //     let todayDate = new Date();
-        //     let dateTime = todayDate.toLocaleString();
-        //     const today = new Date() today. toLocaleString('default', { month: 'long' }) ...
-        // today. toLocaleString('default', { month: 'short' }) ...
-        // const today = new Date() today. toLocaleString('it-IT', { month: 'long' })
+    let differenceInDays = this.getDifferenceInDays(date1, date);
+    let differenceInHours = this.getDifferenceInHours(date1, date)
+    let differenceInMinutes = this.getDifferenceInMinutes(date1, date)
+    let differenceInSeconds = this.getDifferenceInSeconds(date1, date)
+    console.log(differenceInDays);
+    console.log(differenceInHours);
+    console.log(differenceInMinutes);
+    console.log(differenceInSeconds);
+
+    let dueDateOfTask = 0
+    if (status !== 2) {
+      if (differenceInDays > 0) {
+        if (differenceInDays > 365) {
+          let dueYears = differenceInDays/365
+          dueDateOfTask = "Due in " + dueYears + "Years"
+        } else if(differenceInDays > 30) {
+          let dueMonths = differenceInDays/30
+          dueDateOfTask = "Due in " + dueMonths + "Months"
+        } else if(differenceInHours > 24) {
+          dueDateOfTask = "Due in " + differenceInDays + "d " + differenceInHours + "h"
+        } else {
+          if(differenceInHours < 1) {
+            dueDateOfTask = "Due in " + differenceInMinutes + "m "
+            Object.values(this.props.tasks).map(item => {
+              if (item.id === id) {
+                item.color = "yellow"
+              }
+            })
+          } else {
+            let dueMinutes = Math.round(differenceInHours/60)
+            let dueSeconds = Math.round(differenceInMinutes/60)
+            dueDateOfTask = "Due in " + (differenceInHours) + "h " + dueMinutes + "m " + dueSeconds + "s"
+          }
+        }
+      } else if(differenceInDays === 0) {
+        if (differenceInHours === 0) {
+          if (differenceInMinutes === 0) {
+            if (differenceInSeconds === 0) {
+              dueDateOfTask = "Due Time Exceed"
+              Object.values(this.props.tasks).map(item => {
+                if (item.id === id) {
+                  item.color = "red"
+                }
+              })
+            } else {
+              dueDateOfTask = "Due in " + (differenceInSeconds) + "m "
+              Object.values(this.props.tasks).map(item => {
+                if (item.id === id) {
+                  item.color = "yellow"
+                }
+              })
+            }
+          } else {
+            dueDateOfTask = "Due in " + (differenceInMinutes) + "m "
+            Object.values(this.props.tasks).map(item => {
+              if (item.id === id) {
+                item.color = "yellow"
+              }
+            })
+          }
+        } else {
+          if(differenceInHours < 1) {
+            dueDateOfTask = "Due in " + differenceInMinutes + "m "
+            Object.values(this.props.tasks).map(item => {
+              if (item.id === id) {
+                item.color = "yellow"
+              }
+            })
+          } else {
+            let dueMinutes = Math.round(differenceInHours/60)
+            let dueSeconds = Math.round(differenceInMinutes/60)
+            dueDateOfTask = "Due in " + (differenceInHours) + "h " + dueMinutes + "m " + dueSeconds + "s"
+          }
+        }
+      } else {
+        dueDateOfTask = "Due Time Exceed"
+        Object.values(this.props.tasks).map(item => {
+          if (item.id === id) {
+            item.color = "red"
+          }
+        })
+      }
+    } else {
+      dueDateOfTask = "Task completed"
+    }
 
 
-        // var date = new Date(curTime),
-        // mnth = ("0" + (date.getMonth() + 1)).slice(-2),
-        // day = ("0" + date.getDate()).slice(-2);
-        // let presentdate =  [date.getFullYear(), mnth, day].join("-");
-        // console.log(presentdate);
-        //date1 = new Date ( "January 6, 2013" );
-        // date = date1.getDate();
-        // year = date1.getFullYear();
-        // month = date1.getMonth();
+    return dueDateOfTask
+  }
+
+  getDifferenceInDays(date1, date2) {
+    // const diffInMs = Math.abs(date2 - date1);
+    const diffInMs = date2 - date1;
+    return Math.trunc(diffInMs / (1000 * 60 * 60 * 24));
+  }
+
+  getDifferenceInHours(date1, date2) {
+    // const diffInMs = Math.abs(date2 - date1);
+    const diffInMs = date2 - date1;
+    return Math.trunc(diffInMs / (1000 * 60 * 60));
+  }
+
+  getDifferenceInMinutes(date1, date2) {
+    const diffInMs = date2 - date1;
+    return Math.trunc(diffInMs / (1000 * 60));
+  }
+
+  getDifferenceInSeconds(date1, date2) {
+    const diffInMs = date2 - date1;
+    return Math.trunc(diffInMs / 1000);
   }
 
   deleteTask(e, id) {
@@ -144,13 +215,13 @@ class ManageTasks extends Component {
     this.props.updateTasks(allTasks)
   }
 
-  makeCompleted(e, id) {
+  makeTaskCompleted(e, id) {
     let allTasks = [];
     Object.values(this.props.tasks).map(item => {
       if (item.id === id) {
-        item.Duedate = "Task completed"
+        // item.Duedate = "Task completed"
         item.taskCompleted = !item.taskCompleted
-        item.status = 2
+        item.status = (item.status === 2) ? 1 : 2 // completed tasks
       }
       allTasks.push(item);
     })
@@ -158,9 +229,8 @@ class ManageTasks extends Component {
   }
 
   render() {
-    const { tasks, taskTypes, typeFilter, statusFilter, allTypes, Statuses } = this.state
+    const { tasks, typeFilter, statusFilter, allTypes, Statuses, taskStatus } = this.state
     console.log(tasks);
-
     return(
       <reactbootstrap.Container className="pt-5 px-0">
         <div style={{ color: '#EC661C', fontSize: '20px'}} >
@@ -170,7 +240,7 @@ class ManageTasks extends Component {
           <div style={{ width: '45%', float: 'right', marginbottom: '15px',border: '0px' }}>
             <reactbootstrap.FormControl as="select" name="typeFilter"
                 className="input_sw"
-                value={typeFilter}
+                value={statusFilter}
                 onChange={e => this.handleStatusSelection(e)} >
                 <option>Status : All</option>
                 {Object.values(Statuses).map(Item => <option value={Item.id}>{Item.name}</option>)}
@@ -179,7 +249,7 @@ class ManageTasks extends Component {
           <div style={{ width: '20%', float: 'right', marginbottom: '15px',border: '0px' }}>
             <reactbootstrap.FormControl as="select" name="statusFilter"
                 className="input_sw"
-                value={statusFilter}
+                value={typeFilter}
                 onChange={e => this.handleTypeSelection(e)} >
                 <option>Type : All</option>
                 {Object.values(allTypes).map(taskType => <option value={taskType.id}>{taskType.name}</option>)}
@@ -198,11 +268,14 @@ class ManageTasks extends Component {
               </thead>
               <tbody style={{ backgroundColor: 'gray', color: 'white', position: 'sticky', top: '0', textAlign: 'center' }}>
                 {Object.values(tasks).map((item) => (
-                  <tr style={{ textAlign: 'center', border: '2px solid black' }} onClick = {e => this.props.editTask(e, item.id)}>
-                     <td>{item.name} {"(Due in )"} { item.Duedate === "Task completed" ? "Task completed" : this.convert(item.Duedate) }</td>
+                  <tr style={{ textAlign: 'center', border: '2px solid black' }} onClick = {e => this.props.editTask(item.id)}>
+                     <td style={{ backgroundColor: item.color }}>
+                       {item.color}
+                       {item.name} { item.Duedate === "Task completed" ? "Task completed" : this.convert(item.Duedate, item.id, item.status) }
+                     </td>
                      <td>
                        <Form.Check
-                           onChange={e => this.makeCompleted(e, item.id)}
+                           onChange={e => this.makeTaskCompleted(e, item.id)}
                            name='makeCompleted'
                            checked={item.taskCompleted}
                            label={""}

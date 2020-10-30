@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import * as reactbootstrap from 'react-bootstrap';
 import DateTimePicker from 'react-datetime-picker';
 import { Constants } from '../commonData/Constants';
+import DatePicker from 'react-datepicker';
 
 class CreateTask extends Component {
   constructor(props) {
@@ -12,6 +13,7 @@ class CreateTask extends Component {
       taskTypes: Constants.Types,
       type: 0,
       DateTime: null,
+      // DateTime: new Date(),
       tasks: Constants.Tasks,
       added: false,
       taskId: this.props.taskId,
@@ -22,21 +24,22 @@ class CreateTask extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.editId !== this.props.editId) {
-      Object.values(this.props.tasks).map(item => {
-        if (Number(item.id) === Number(this.props.editId)) {
-          this.setState({
-            added: false,
-            title: item.name,
-            description: item.desciption,
-            taskTypes: Constants.Types,
-            type: item.type,
-            DateTime: item.Duedate,
-          })
-          localStorage.removeItem("editId");
-        }
-      })
-    }
+      if (prevProps.editId !== this.props.editId) {
+        Object.values(this.props.tasks).map(item => {
+          if (Number(item.id) === Number(this.props.editId) && (item.id !== null && this.props.editId !== null)) {
+            this.setState({
+              added: false,
+              title: item.name,
+              description: item.desciption,
+              taskTypes: Constants.Types,
+              type: item.type,
+              DateTime: item.Duedate,
+              disableDate: false,
+            })
+            localStorage.removeItem("editId");
+          }
+        })
+      }
   }
 
   creattask(e) {
@@ -47,7 +50,7 @@ class CreateTask extends Component {
       taskTypes: Constants.Types,
       type: 0,
       DateTime: null,
-      taskId: null  ,
+      taskId: null,
     })
   }
 
@@ -60,25 +63,53 @@ class CreateTask extends Component {
   }
 
   addtask(e) {
+    console.log("asss");
     this.setState({
       added: true,
     })
-    if (this.state.title !== ' ' && this.state.DateTime !== null) {
-      let newTask = {
-        "id": localStorage.getItem('count') + 1,
-        "name": this.state.title,
-        "desciption": this.state.description,
-        "type": this.state.type,
-        "Duedate": this.state.DateTime,
-        "taskCompleted": 0,
-        "status": 0,
+    if (this.props.editId === null) {
+      if (this.state.title !== '' && this.state.DateTime !== null) {
+        let newTask = {
+          "id": Number(localStorage.getItem('count')) + 1,
+          "name": this.state.title,
+          "desciption": this.state.description,
+          "type": this.state.type,
+          "Duedate": this.state.DateTime,
+          "taskCompleted": 0,
+          "status": 1,
+          "color": "grey",
+        }
+        console.log(newTask);
+        let allTasks = [];
+        Object.values(this.props.tasks).map(item => {
+          allTasks.push(item);
+        })
+        allTasks.push(newTask)
+        this.props.updateTasks(allTasks)
+        this.setState({
+          added: false,
+          title: '',
+          description: '',
+          taskTypes: Constants.Types,
+          type: 0,
+          DateTime: null,
+        })
       }
+    } else {
       let allTasks = [];
       Object.values(this.props.tasks).map(item => {
+        if (Number(item.id) === Number(this.props.editId)) {
+          item.name = this.state.title
+          item.desciption = this.state.description
+          item.type = this.state.type
+          item.Duedate = this.state.DateTime
+          item.taskCompleted = 0
+          item.status = 1
+        }
         allTasks.push(item);
       })
-      allTasks.push(newTask)
-      this.props.updateTasks(allTasks)
+      // this.props.editTask(this.props.editId)
+      this.props.updateTasks(allTasks, 2)
       this.setState({
         added: false,
         title: '',
@@ -151,10 +182,33 @@ class CreateTask extends Component {
            <reactbootstrap.FormGroup>
              <div style={{ marginbottom: '15px',border: '0px' }}>
                <label style={{ color: '#EC661C', fontSize: '14px' }}>{'Due at'}<span style={{ color: 'red' }}> * </span></label>
-                 <DateTimePicker
+                 {/* <DateTimePicker
                    onChange={e => this.handleDateChange(e)}
                    value={DateTime}
-                 />
+                   disabled={this.state.disableDate}
+                 /> */}
+                 {/* <div className="form-group"> */}
+                   <DatePicker
+                       selected={this.state.DateTime}
+                       onChange={(date) => this.handleDateChange(date)}
+                       showTimeSelect
+                       // showTimeSelectOnly
+                       timeFormat="HH:mm"
+                       // timeIntervals={15}
+                       // timeCaption="time"
+                       dateFormat="yyyy/M/d h:mm aa"
+                   />
+                 {/* </div> */}
+                 {/* <DatePicker
+                     selected={this.state.dateType2}
+                     onChange={(date) => this.handleDate(date)}
+                     showTimeSelect
+                     showTimeSelectOnly
+                     timeFormat="HH:mm"
+                     timeIntervals={15}
+                     timeCaption="time"
+                     dateFormat="h:mm aa"
+                 /> */}
                  {added === true && DateTime === null &&
                    <div style={{ color: 'red', fontSize: '15px' }}>{"DateTime field is required"}</div>
                  }
